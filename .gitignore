@@ -1,0 +1,13 @@
+# Obsidian
+.obsidian/
+.trash/
+
+# Système
+.DS_Store
+Thumbs.db
+
+# Notebooks
+.ipynb_checkpoints/
+
+# Secrets
+.env
