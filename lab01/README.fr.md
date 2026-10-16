@@ -685,10 +685,6 @@ int main() {
 
 Le dépôt contient un répertoire par architecture processeur. Ouvrez les répertoires [`amd64/hello-world`](https://github.com/docker-library/hello-world/tree/master/amd64/hello-world) et [`i386/hello-world`](https://github.com/docker-library/hello-world/tree/master/i386/hello-world) :
 
-[Contenu du répertoire amd64/hello-world : Dockerfile et binaire hello](https://claude.ai/chat/figs/fig2.png)
-
-[Contenu du répertoire i386/hello-world : Dockerfile et binaire hello](https://claude.ai/chat/figs/fig3.png)
-
 Chaque répertoire contient un **Dockerfile** et le **binaire compilé** `hello` pour cette architecture. Contenu du Dockerfile :
 
 ```dockerfile
