@@ -42,10 +42,19 @@ On considère une application web de **gestion de tâches (To-Do list)** qui agi
 - **Le conteneur web** exécute l'application Python/Flask. Il lit les paramètres de connexion dans ses variables d'environnement (`DB_HOST`, `POSTGRES_DB`, `POSTGRES_USER`, `POSTGRES_PASSWORD`).
 - **Le conteneur base de données** exécute PostgreSQL 16. Au **premier** démarrage, il exécute `init.sql`, qui crée la table `tasks` et insère deux tâches d'exemple.
 - **Le volume** conserve les données même si le conteneur est supprimé.
+### 1.2. Récupération et structure du projet
 
-### 1.2. Structure du projet
+Téléchargez le dossier `sources/` dans votre répertoire personnel (copiez-collez la commande entière) :
 
-Le dossier `sources/` est fourni :
+```bash
+cd ~
+curl -L https://github.com/maymounabensaid/docker-labs/archive/refs/heads/main.tar.gz \
+  | tar xz --strip-components=2 docker-labs-main/lab04/sources
+cd sources
+ls        # doit afficher : app  db
+```
+
+Le dossier `sources/` contient :
 
 ```
 sources/
