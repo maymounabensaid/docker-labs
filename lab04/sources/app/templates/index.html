@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>To-Do — Docker Lab 04</title>
+  <style>
+    body { font-family: system-ui, sans-serif; max-width: 640px; margin: 40px auto; padding: 0 16px; color: #222; }
+    h1 { margin-bottom: 4px; }
+    .sub { color: #666; margin-top: 0; }
+    form.add { display: flex; gap: 8px; margin: 24px 0; }
+    form.add input { flex: 1; padding: 8px; font-size: 1rem; }
+    button { padding: 6px 12px; cursor: pointer; }
+    ul { list-style: none; padding: 0; }
+    li { display: flex; align-items: center; gap: 8px; padding: 8px 0; border-bottom: 1px solid #eee; }
+    li span { flex: 1; }
+    li.done span { text-decoration: line-through; color: #999; }
+    li small { color: #999; }
+    li form { margin: 0; }
+  </style>
+</head>
+<body>
+  <h1>📝 To-Do list</h1>
+  <p class="sub">Flask container ➜ PostgreSQL container (host: <code>{{ db_host }}</code>)</p>
+
+  <form class="add" action="{{ url_for('add') }}" method="post">
+    <input name="title" placeholder="New task…" maxlength="200" required>
+    <button type="submit">Add</button>
+  </form>
+
+  <ul>
+    {% for id, title, done, created_at in tasks %}
+    <li class="{{ 'done' if done }}">
+      <form action="{{ url_for('toggle', task_id=id) }}" method="post">
+        <button title="Mark done / not done">{{ '↩' if done else '✔' }}</button>
+      </form>
+      <span>{{ title }}</span>
+      <small>{{ created_at.strftime('%d/%m %H:%M') }}</small>
+      <form action="{{ url_for('delete', task_id=id) }}" method="post">
+        <button title="Delete">🗑</button>
+      </form>
+    </li>
+    {% else %}
+    <li>No tasks yet.</li>
+    {% endfor %}
+  </ul>
+  <p class="sub">{{ tasks|length }} task(s) stored in the database.</p>
+</body>
+</html>
