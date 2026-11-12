@@ -26,22 +26,17 @@ On considère une application web de **gestion de tâches (To-Do list)** qui agi
 
 ### 1.1. Architecture
 
-```
-          navigateur
-              │  http://localhost:8080
-              ▼
-   ┌─────────────────────┐        réseau Docker        ┌──────────────────────┐
-   │  web  (Flask :5000) │ ──────────────────────────▶ │  db  (PostgreSQL)    │
-   │  image: todo-web    │   hôte "db", port 5432      │  image: todo-db      │
-   └─────────────────────┘                             └──────────┬───────────┘
-                                                                  │
-                                                       volume  db-data
-                                                  (/var/lib/postgresql/data)
-```
+### 1.1. Architecture
 
+Le schéma ci-dessous montre l'architecture **finale** du lab (partie 6) : 
 - **Le conteneur web** exécute l'application Python/Flask. Il lit les paramètres de connexion dans ses variables d'environnement (`DB_HOST`, `POSTGRES_DB`, `POSTGRES_USER`, `POSTGRES_PASSWORD`).
-- **Le conteneur base de données** exécute PostgreSQL 16. Au **premier** démarrage, il exécute `init.sql`, qui crée la table `tasks` et insère deux tâches d'exemple.
-- **Le volume** conserve les données même si le conteneur est supprimé.
+- **Le conteneur base de données** exécute PostgreSQL 16. Au **premier** démarrage, il exécute `init.sql`, qui crée la table `tasks` et insère deux tâches d'exemple. Son port 5432 n'est pas publié : seuls les conteneurs du réseau peuvent le joindre.
+- **Le conteneur pgAdmin** fournit une interface web d'administration de la base (ajouté en partie 5). Il joint PostgreSQL par le nom `db`, comme l'application.
+- **Le volume** conserve les données même si le conteneur `db` est supprimé.
+- **Le fichier `.env`** regroupe les variables d'environnement lues par les trois conteneurs.
+
+![Architecture du lab 04](images/architecture-lab04.png)
+
 ### 1.2. Récupération et structure du projet
 
 Téléchargez le dossier `sources/` dans votre répertoire personnel (copiez-collez la commande entière) :
@@ -82,9 +77,8 @@ nano .env
 POSTGRES_DB=todo
 POSTGRES_USER=todo
 POSTGRES_PASSWORD=todo_pwd
-
 # pgAdmin web login (parts 5 and 6)
-PGADMIN_DEFAULT_EMAIL=admin@tekup.tn
+PGADMIN_DEFAULT_EMAIL=admin@edu.tn
 PGADMIN_DEFAULT_PASSWORD=admin
 ```
 
@@ -150,7 +144,7 @@ docker volume create todo-data
 ### 3.2. Conteneur base de données
 
 ```bash
-docker run -d --name todo-db \
+docker run -d --name db \
   --network todo-net \
   --env-file .env \
   -v todo-data:/var/lib/postgresql/data \
@@ -161,34 +155,34 @@ docker run -d --name todo-db \
 - Vérifiez dans le journal du conteneur (`docker logs`) que le script `init.sql` a bien été exécuté au premier démarrage :
 
 ```bash
-docker logs todo-db | grep init.sql 
+docker logs db | grep init.sql 
 ```
 ### 3.3. Conteneur application web
 
 ```bash
-docker run -d --name todo-web \
+docker run -d --name web \
   --network todo-net \
   --env-file .env \
-  -e DB_HOST=todo-db \
+  -e DB_HOST=db \
   -p 8080:5000 \
   todo-web
 ```
 
 Ouvrez http://localhost:8080, puis ajoutez, cochez et supprimez des tâches.
 
-**Question 2 :** l'application contacte l'hôte `todo-db`. Qui traduit ce nom en adresse IP ? Vérifiez avec :
+**Question 2 :** l'application contacte l'hôte `db`. Qui traduit ce nom en adresse IP ? Vérifiez avec :
 
 ```bash
 docker network inspect todo-net
 ```
 
-**Question 3 :** supprimez `todo-web` et relancez-le **sans** l'option `--network todo-net`. Que se passe-t-il dans le navigateur ? Expliquez.
+**Question 3 :** supprimez `web` et relancez-le **sans** l'option `--network todo-net`. Que se passe-t-il dans le navigateur ? Expliquez.
 
 > **Note :** Les commandes PostgreSQL utilisées dans ce lab sont résumées dans le [memo](MEMO.md). 
 ### 3.4. Accès direct à la base
 
 ```bash
-docker exec -it todo-db psql -U todo -d todo
+docker exec -it db psql -U todo -d todo
 ```
 
 ```sql
@@ -203,26 +197,26 @@ Vérifiez que les tâches ajoutées depuis le navigateur apparaissent bien.
 Supprimez les conteneurs et le réseau :
 
 ```bash
-docker rm -f todo-web todo-db
+docker rm -f web db
 docker network rm todo-net
 ```
 
-**Question 4 :** le volume `todo-data` existe encore (`docker volume ls`). Si vous relancez `todo-db` avec ce volume, retrouverez-vous vos tâches ? `init.sql` sera-t-il ré-exécuté ?
+**Question 4 :** le volume `todo-data` existe encore (`docker volume ls`). Si vous relancez `db` avec ce volume, retrouverez-vous vos tâches ? `init.sql` sera-t-il ré-exécuté ?
 
 Vérifiez votre réponse :
 
 ```bash
-docker run -d --name todo-db --env-file .env -v todo-data:/var/lib/postgresql/data todo-db
-docker exec -it todo-db psql -U todo -d todo -c "SELECT * FROM tasks;"
-docker logs todo-db | grep init.sql      
+docker run -d --name db --env-file .env -v todo-data:/var/lib/postgresql/data todo-db
+docker exec -it db psql -U todo -d todo -c "SELECT * FROM tasks;"
+docker logs db | grep init.sql      
 ```
 
 Après le test, supprimez le conteneur, le volume, puis les images :
 
 ```bash
-docker rm -f todo-db
+docker rm -f db
 docker volume rm todo-data
-docker rmi todo-web todo-db
+docker rmi web db
 docker volume ls                 # todo-data a disparu
 docker images | grep todo        # plus aucune image todo-*
 ```
@@ -323,11 +317,9 @@ Démarrez le conteneur `pgadmin` à partir de l'image `dpage/pgadmin4` avec les 
 - nom du conteneur : `--name pgadmin`
 - port : `-p 5050:80`
 - variables d'environnement : `--env-file .env`
-- réseau : `???????`
-
+- réseau : `sources_default`
 
 ```bash
-docker network ls                  
 docker run -d --name pgadmin -p 5050:80 --env-file .env \
   --network sources_default \
   dpage/pgadmin4
