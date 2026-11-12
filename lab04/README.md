@@ -386,6 +386,4 @@ Reconnectez-vous sur http://localhost:5050 et ajoutez à nouveau le serveur `db`
 
 ```bash
 docker compose down -v
-docker rmi todo-web todo-db
-docker volume rm todo-data
 ```
