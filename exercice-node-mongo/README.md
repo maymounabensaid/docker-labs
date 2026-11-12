@@ -115,8 +115,6 @@ docker compose ps
 docker compose logs app        # doit afficher : Connecté à MongoDB
 ```
 
->  En cas d'erreur dans le fichier, `docker compose config` indique la ligne fautive (souvent un problème d'indentation).
-
 **Question 2 :** dans `MONGO_URL`, l'application contacte l'hôte `mongo`. D'où vient ce nom, et qui le traduit en adresse IP ?
 
 **Question 3 :** le port `27017` de MongoDB n'est pas publié sur l'hôte. Comment l'application peut-elle quand même l'utiliser ?
